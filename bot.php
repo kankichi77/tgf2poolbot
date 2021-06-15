@@ -11,7 +11,8 @@ $f2pool_path = "https://api.f2pool.com/bitcoin/";
 
 $commands = [
         "/hello",
-        "/f2_online",
+	"/f2_online",
+	"/help",
 ];
 
 try {
@@ -46,21 +47,38 @@ if ($update) {
     //file_get_contents($telegram_path."/sendmessage?chat_id=".$chatId."&text=Hello ".$user_id);
     
   } elseif (isCommand($message, $commands, 1)) {	  
-    $f2pool_username = substr($message, strlen($commands[1]));
-    returnTgMessage($f2pool_username);
-
-  }elseif (0) {
+    $f2pool_username = substr($message, strlen($commands[1])+1);
+    //returnTgMessage($f2pool_username);
+  //}elseif (0) {
     $path = $f2pool_path . $f2pool_username;
-    $f2pool_info = json_decode(file_get_contents($f2pool_path), TRUE);
-    if ($f2pool_info) {
+    $f2pool_info = json_decode(file_get_contents($path), TRUE);
+    if (isValidF2Username($f2pool_info)) {
       //$message = "F2 Pool Info retrieved";
-      $message = $f2pool_info["worker_length_online"] . " worker(s) online";
+      $message = $f2pool_info["worker_length_online"] . "/" . $f2pool_info["worker_length"];
+      $message .= " worker(s) online\n";
+      $message .= "Total Current Hashrate: " . toTH($f2pool_info["hashrate"],2) . "\n";
+      $message .= "Total 24h hashrate: " . toTH($f2pool_info["hashes_last_hour"],2) . "\n";
+      $message .= "\n";
+      $counter = 0;
+      foreach ($f2pool_info["workers"] as $worker) {
+	$counter++;      
+        $message .= $counter . ") " . $worker[0] . " - " . toTH($worker[1],2) . " - " . toTH($worker[2],2);
+      }
+      $message .= "";
     } else {
       $message = "Error";
     }
     returnTgMessage($message);
     //file_get_contents($telegram_path."/sendmessage?chat_id=".$chatId."&text=".$message);
-  
+
+  } elseif (isCommand($message, $commands, 2)) {
+    $message = "This bot will help you retrieve stats on your miner at the F2 Pool\n";
+    $message .= "\n";
+    $message .= "/f2_online_<f2_username>\n";
+    $message .= "Replace <username> with your F2 Pool username. This will show you your current online workers' stats in the following format:\n";
+    $message .= "worker_name - last_1_hour_hashrate - last_24hour_hashrate\n";
+
+    returnTgMessage($message);
   } else {
     if (strlen($message) > 12) $message = substr($message, 0, 12) . "...";
     returnTgMessage($message);
@@ -75,12 +93,25 @@ if ($update) {
   echo "</body></html>";
 }
 
+function isValidF2Username($pool_info) {
+  $result = false;
+  if ($pool_info["worker_length"] != "0") {
+    $result = true;
+  }
+  return $result;
+}
+
 function isCommand($m, $commands, $i) {
   return strpos($m, $commands[$i]) === 0;
 }
 
 function returnTgMessage($m) {
   global $telegram_path, $chatId;
-  file_get_contents($telegram_path."/sendmessage?chat_id=".$chatId."&text=".$m);
+  file_get_contents($telegram_path."/sendmessage?chat_id=".$chatId."&text=".urlencode($m));
+}
+
+function toTH($h,$d) {
+  //return floatval($h)/1000000000000;	
+  return round(floatval($h)/1000000000000,$d);
 }
 ?>

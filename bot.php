@@ -1,6 +1,6 @@
 <?php
-require_once "env.php";
-require_once "db.php";
+require "env.php";
+require "db.php";
 
 $token = $TELEGRAM_BOT_TOKEN;
 $telegram_path = "https://api.telegram.org/bot" . $token;

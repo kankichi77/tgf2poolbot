@@ -1,15 +1,16 @@
 <?php
-require_once "env.php";
+require "env.php";
 
 Class f2poolbot_db {
   private $db;
 
   public function __construct() {
+    global $CONFIG;
     $this->db = new Redis();
 
     try {
       $this->db->connect("localhost");
-      $this->db->select($REDIS_DB);
+      $this->db->select($CONFIG["REDIS_DB"]);
     } catch( Exception $e ){
       throw $e;
     }

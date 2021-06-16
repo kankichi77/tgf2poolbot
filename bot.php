@@ -15,6 +15,7 @@ $commands = [
 	"status" => "/status",
 	"status_workers" => "/status_workers",
 	"help" => "/help",
+	"start" => "/start",
 	"enable_automonitor" => "/enable_automonitor",
 	"disable_automonitor" => "/disable_automonitor",
 ];
@@ -89,7 +90,8 @@ if ($update) {
   } elseif (isCommand($message, $commands, "disable_automonitor")) {
     $db->setAutoMonitorMode($user_id, 0);
     returnTgMessage("Auto Monitor Mode disabled.");
-  } elseif (isCommand($message, $commands, "help")) {
+  } elseif (isCommand($message, $commands, "help") ||
+            isCommand($message, $commands, "start")) {
     $reply = $TELEGRAM_BOT_NAME . "\n";
     $reply .= "This bot will retrieve stats on your miner at the F2 Pool\n";
     $reply .= "\n";

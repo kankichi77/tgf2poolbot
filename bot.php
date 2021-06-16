@@ -1,16 +1,22 @@
 <?php
-require "env.php";
+require_once "env.php";
+require_once "db.php";
+
 $token = $telegram_bot_token;
 $telegram_path = "https://api.telegram.org/bot" . $token;
 $arg = "";
 $ts = date('Y/m/d H:i:s');
-$redis = new Redis();
 $f2pool_path = "https://api.f2pool.com/bitcoin/";
+
+$redis = new Redis();
+$db = new f2poolbot_db();
 
 $commands = [
 	"status" => "/status",
 	"status_workers" => "/status_workers",
 	"help" => "/help",
+	"enable_automonitor" => "/enable_automonitor",
+	"disable_automonitor" => "/disable_automonitor",
 ];
 
 try {
@@ -38,6 +44,8 @@ if ($update) {
   $username = $update["message"]["from"]["username"];
   $user_id = $update["message"]["from"]["id"];
 
+  $db->setTelegramUsername($user_id, $username);
+  
   if (isCommand($message, $commands, "status")) {
     if (isCommand($message, $commands, "status_workers")) {
       $f2pool_username = substr($message, strlen($commands["status_workers"])+1);
@@ -71,6 +79,16 @@ if ($update) {
       $reply = "Error retrieving pool data.";
     }
     returnTgMessage($reply);
+  } elseif (isCommand($message, $commands, "enable_automonitor")) {
+    if ($db->isF2UsernameSet($user_id)) {	  
+      //$db->setAutoMonitorMode($user_id, 1);
+      returnTgMessage("Auto Monitor Mode enabled.");
+    } else {
+      returnTgMessage("BOO");
+    }
+  } elseif (isCommand($message, $commands, "disable_automonitor")) {
+    $db->setAutoMonitorMode($user_id, 0);
+    returnTgMessage("Auto Monitor Mode disabled.");
   } elseif (isCommand($message, $commands, "help")) {
     $reply = "This bot will retrieve stats on your miner at the F2 Pool\n";
     $reply .= "\n";

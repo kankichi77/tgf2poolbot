@@ -2,7 +2,7 @@
 require_once "env.php";
 require_once "db.php";
 
-$token = $telegram_bot_token;
+$token = $TELEGRAM_BOT_TOKEN;
 $telegram_path = "https://api.telegram.org/bot" . $token;
 $arg = "";
 $ts = date('Y/m/d H:i:s');
@@ -90,7 +90,8 @@ if ($update) {
     $db->setAutoMonitorMode($user_id, 0);
     returnTgMessage("Auto Monitor Mode disabled.");
   } elseif (isCommand($message, $commands, "help")) {
-    $reply = "This bot will retrieve stats on your miner at the F2 Pool\n";
+    $reply = $TELEGRAM_BOT_NAME . "\n";
+    $reply .= "This bot will retrieve stats on your miner at the F2 Pool\n";
     $reply .= "\n";
     $reply .= "/status_<username>\n";
     $reply .= "Replace <username> with your F2 Pool username. This will show you a summary of your current mining stats.\n";
@@ -105,7 +106,7 @@ if ($update) {
     // Do nothing	  
     // returnTgMessage($message);
   }
-} elseif (0) {
+} elseif (1) {
   // DEBUG
   echo "<html><head><title></title></head><body>";	
   echo $redis->get("log_count") . "<br>";

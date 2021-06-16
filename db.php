@@ -9,7 +9,7 @@ Class f2poolbot_db {
 
     try {
       $this->db->connect("localhost");
-      $this->db->select(2);
+      $this->db->select($REDIS_DB);
     } catch( Exception $e ){
       throw $e;
     }

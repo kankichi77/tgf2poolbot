@@ -3,6 +3,9 @@ require "env.php";
 
 Class f2poolbot_db {
   private $db;
+  private $logkey = "log_count";
+  private $lastaccessedkey = "last_accessed";
+  private $previouslastaccessedkey = "previous_last_accessed";
 
   public function __construct() {
     global $CONFIG;
@@ -14,6 +17,48 @@ Class f2poolbot_db {
     } catch( Exception $e ){
       throw $e;
     }
+  }
+
+  public function exists($key) {
+    return $this->db->exists($key);
+  }
+
+  public function set($key, $value) {
+    return $this->db->set($key, $value);
+  }
+
+  public function get($key) {
+    return $this->db->get($key);
+  }
+
+  public function incr($key) {
+    return $this->db->incr($key);
+  }
+
+  public function addLog() {
+    $ts = date('Y/m/d H:i:s');
+    if ($this->exists($this->logkey)) {
+      $this->incr($this->logkey);
+    } else {
+      $this->set($this->logkey, 1);
+    }
+    if (!$this->exists($this->lastaccessedkey)) {
+      $this->set($this->lastaccessedkey,$ts);
+    }
+    $this->set($this->previouslastaccessedkey, $this->get($this->lastaccessedkey));
+    $this->set($this->lastaccessedkey, $ts);
+  }
+
+  public function getLogCount() {
+    return $this->get($this->logkey);
+  }
+
+  public function getLastAccessed() {
+    return $this->get($this->lastaccessedkey);
+  }
+
+  public function getPrevLastAccessed() {
+    return $this->get($this->previouslastaccessedkey);
   }
 
   public function setTelegramUsername($uid, $uname) {

@@ -21,18 +21,7 @@ $commands = [
 ];
 
 try {
-  $redis->connect("localhost");
-  $redis->select(2);
-  if($redis->exists("log_count")) {
-    $redis->incr("log_count");
-  } else {
-    $redis->set("log_count", 1);
-  }
-  if (!$redis->exists("last_accessed")) {
-    $redis->set("last_accessed", $ts);
-  }
-  $redis->set("previous_last_accessed", $redis->get("last_accessed"));
-  $redis->set("last_accessed", $ts);
+  $db->addLog();    
 } catch( Exception $e ){
   echo $e->getMessage();
 } 
@@ -111,9 +100,9 @@ if ($update) {
 } elseif (1) {
   // DEBUG
   echo "<html><head><title></title></head><body>";	
-  echo $redis->get("log_count") . "<br>";
-  echo $redis->get("previous_last_accessed") . "<br>";
-  echo $redis->get("last_accessed") . "<br>";
+  echo $db->getLogCount() . "<br>";
+  echo $db->getPrevLastAccessed() . "<br>";
+  echo $db->getLastAccessed() . "<br>";
   echo "</body></html>";
 }
 

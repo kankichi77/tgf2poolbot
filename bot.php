@@ -1,15 +1,22 @@
 <?php
 require "env.php";
 require "db.php";
+require "telegram.php";
+require "f2pool.php";
 
-$token = $TELEGRAM_BOT_TOKEN;
-$telegram_path = "https://api.telegram.org/bot" . $token;
+//$token = $ENV["TELEGRAM_BOT_TOKEN"];
+//$telegram_path = "https://api.telegram.org/bot" . $ENV["TELEGRAM_BOT_TOKEN"];
 $arg = "";
 $ts = date('Y/m/d H:i:s');
-$f2pool_path = "https://api.f2pool.com/bitcoin/";
+//$f2pool_path = "https://api.f2pool.com/bitcoin/";
 
 $redis = new Redis();
 $db = new f2poolbot_db();
+$tg = new Telegram();
+$pool = new F2Pool();
+
+$f2pool_path = $pool->getApiPath();
+$telegram_path = $tg->getTelegramPath();
 
 $commands = [
 	"status" => "/status",
@@ -34,6 +41,10 @@ if ($update) {
   $username = $update["message"]["from"]["username"];
   $user_id = $update["message"]["from"]["id"];
 
+  $tg->setMessageText($message);
+  $tg->setUserId($user_id);
+  $tg->setUsername($username);
+  $tg->setChatId($chatId);
   $db->setTelegramUsername($user_id, $username);
   
   if (isCommand($message, $commands, "status")) {
@@ -44,7 +55,7 @@ if ($update) {
     }
     $f2pool_username = strtok($f2pool_username, " ");
     if ($f2pool_username == "" || $f2pool_username == "username") {
-      returnTgMessage("Please specify the username");
+      returnTgMessage("Please specify the F2 Pool username");
       exit;
     }
     $path = $f2pool_path . $f2pool_username;
@@ -74,14 +85,14 @@ if ($update) {
       //$db->setAutoMonitorMode($user_id, 1);
       returnTgMessage("Auto Monitor Mode enabled.");
     } else {
-      returnTgMessage("");
+      returnTgMessage("Please set your F2 Pool username");
     }
   } elseif (isCommand($message, $commands, "disable_automonitor")) {
     $db->setAutoMonitorMode($user_id, 0);
     returnTgMessage("Auto Monitor Mode disabled.");
   } elseif (isCommand($message, $commands, "help") ||
             isCommand($message, $commands, "start")) {
-    $reply = $TELEGRAM_BOT_NAME . "\n";
+    $reply = $ENV["TELEGRAM_BOT_NAME"] . "\n";
     $reply .= "This bot will retrieve stats on your miner at the F2 Pool\n";
     $reply .= "\n";
     $reply .= "/status_<username>\n";

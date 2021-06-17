@@ -8,12 +8,12 @@ Class f2poolbot_db {
   private $previouslastaccessedkey = "previous_last_accessed";
 
   public function __construct() {
-    global $CONFIG;
+    global $ENV;
     $this->db = new Redis();
 
     try {
       $this->db->connect("localhost");
-      $this->db->select($CONFIG["REDIS_DB"]);
+      $this->db->select($ENV["REDIS_DB"]);
     } catch( Exception $e ){
       throw $e;
     }

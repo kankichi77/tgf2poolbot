@@ -4,17 +4,13 @@ require "db.php";
 require "telegram.php";
 require "f2pool.php";
 
-//$token = $ENV["TELEGRAM_BOT_TOKEN"];
-//$telegram_path = "https://api.telegram.org/bot" . $ENV["TELEGRAM_BOT_TOKEN"];
 $arg = "";
 $ts = date('Y/m/d H:i:s');
-//$f2pool_path = "https://api.f2pool.com/bitcoin/";
-
 $redis = new Redis();
 $db = new f2poolbot_db();
 $tg = new Telegram();
 $pool = new F2Pool();
-
+$f2pool_path = $pool->getApiPath();
 $f2pool_path = $pool->getApiPath();
 $telegram_path = $tg->getTelegramPath();
 
@@ -25,6 +21,7 @@ $commands = [
 	"start" => "/start",
 	"enable_automonitor" => "/enable_automonitor",
 	"disable_automonitor" => "/disable_automonitor",
+	"set_F2_Username" => "/set_pool_username",
 ];
 
 try {
@@ -46,8 +43,14 @@ if ($update) {
   $tg->setUsername($username);
   $tg->setChatId($chatId);
   $db->setTelegramUsername($user_id, $username);
-  
-  if (isCommand($message, $commands, "status")) {
+  $db->setChatId($user_id, $chatId);
+
+  if (isCommand($message, $commands, "set_F2_Username")) {
+    $f2pool_username = substr($message, strlen($commands["set_F2_Username"])+1);
+    $db->setF2Username($tg->getUserId(), $f2pool_username);
+    returnTgMessage("F2 Pool username set to: " . $f2pool_username);
+
+  } elseif (isCommand($message, $commands, "status")) {
     if (isCommand($message, $commands, "status_workers")) {
       $f2pool_username = substr($message, strlen($commands["status_workers"])+1);
     } else {
@@ -55,40 +58,34 @@ if ($update) {
     }
     $f2pool_username = strtok($f2pool_username, " ");
     if ($f2pool_username == "" || $f2pool_username == "username") {
-      returnTgMessage("Please specify the F2 Pool username");
+      $tg->returnTgMessage("Please specify the F2 Pool username");
       exit;
     }
-    $path = $f2pool_path . $f2pool_username;
-    $f2pool_info = json_decode(file_get_contents($path), TRUE);
-    if (isValidF2Username($f2pool_info)) {
-      $reply = $f2pool_info["worker_length_online"] . "/" . $f2pool_info["worker_length"];
-      $reply .= " worker(s) online\n";
-      $reply .= "Total Current Hashrate: " . toTH($f2pool_info["hashrate"],2) . "\n";
-      $reply .= "Total 24h hashrate: " . toTH($f2pool_info["hashes_last_day"]/(24*60*60),2) . "\n";
 
+    $pool->setUsername($f2pool_username);
+    if ($pool->fetchPoolInfo()) {
       if (isCommand($message, $commands, "status_workers")) {
-        $reply .= "\n";
-        $reply .= "Workers:\n";
-        $counter = 0;
-        foreach ($f2pool_info["workers"] as $worker) {
-	  $counter++;      
-	  $reply .= $counter . ") " . $worker[0] . " - " . toTH($worker[1],2) . " - ";
-	  $reply .= toTH($worker[4]/(24*60*60),2);
-        }
+	    $reply = $pool->getStatusDetailedMessage();
+      } else {
+	    $reply = $pool->getStatusSummaryMessage();
       }
     } else {
       $reply = "Error retrieving pool data.";
     }
-    returnTgMessage($reply);
+    $tg->returnTgMessage($reply);
+
   } elseif (isCommand($message, $commands, "enable_automonitor")) {
+    DevOnly();
     if ($db->isF2UsernameSet($user_id)) {	  
-      //$db->setAutoMonitorMode($user_id, 1);
-      returnTgMessage("Auto Monitor Mode enabled.");
+      $db->setAutoMonitorModeOn($user_id);
+      $db->setBatchRunInterval($user_id, 0);  // default interval
+      $db->setNextBatchRunTime($user_id);
+      $tg->returnTgMessage("Auto Monitor Mode enabled.");
     } else {
-      returnTgMessage("Please set your F2 Pool username");
+      $tg->returnTgMessage("Please set your F2 Pool username");
     }
   } elseif (isCommand($message, $commands, "disable_automonitor")) {
-    $db->setAutoMonitorMode($user_id, 0);
+    $db->setAutoMonitorModeOff($user_id);
     returnTgMessage("Auto Monitor Mode disabled.");
   } elseif (isCommand($message, $commands, "help") ||
             isCommand($message, $commands, "start")) {
@@ -116,7 +113,7 @@ if ($update) {
   echo $db->getLastAccessed() . "<br>";
   echo "</body></html>";
 }
-
+/*
 function isValidF2Username($pool_info) {
   $result = false;
   if ($pool_info["worker_length"] != "0" && $pool_info["worker_length"] != "") {
@@ -124,7 +121,7 @@ function isValidF2Username($pool_info) {
   }
   return $result;
 }
-
+ */
 function isCommand($m, $commands, $i) {
   return strpos($m, $commands[$i]) === 0;
 }

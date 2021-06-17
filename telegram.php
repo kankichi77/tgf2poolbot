@@ -1,5 +1,5 @@
 <?php
-require "env.php";
+require_once "env.php";
 
 Class Telegram {
   private $TELEGRAM_API_PATH;
@@ -14,7 +14,9 @@ Class Telegram {
   }
 
   public function returnTgMessage($m) {
-    file_get_contents($this->TELEGRAM_API_PATH . "/sendmessage?chat_id=" . $this->chatId . "&text=" . urlencode($m));
+    if ($this->chatId) {
+      file_get_contents($this->TELEGRAM_API_PATH . "/sendmessage?chat_id=" . $this->chatId . "&text=" . urlencode($m));
+    }
   }
 
   public function getTelegramPath() {

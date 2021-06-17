@@ -74,7 +74,7 @@ if ($update) {
       //$db->setAutoMonitorMode($user_id, 1);
       returnTgMessage("Auto Monitor Mode enabled.");
     } else {
-      returnTgMessage("BOO");
+      returnTgMessage("");
     }
   } elseif (isCommand($message, $commands, "disable_automonitor")) {
     $db->setAutoMonitorMode($user_id, 0);
@@ -127,7 +127,7 @@ function toTH($h,$d) {
   if ($h == "" || floatval($h) == 0) {
     return 0;
   }
-  return floor(floatval($h)/10000000000)/100;
+  return floor(floatval($h)/10000000000)/100 . " TH/s";
 }
 
 function getNetHR($grossHR, $rejectedH) {

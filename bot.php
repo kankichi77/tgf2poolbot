@@ -204,8 +204,8 @@ This bot will retrieve stats on your miner at the F2 Pool
 /enable_automonitor - Turn on Auto Monitor Mode
 /disable_automonitor - Turn off Auto Monitor Mode
 /show_automonitor_status - Shows the current Auto Monitor Status
-/set_pool_username - Set your F2 Pool username
-/set_automonitor_interval - Set the Auto Monitor interval in minutes
+/set_pool_username_<username> - Set your F2 Pool username
+/set_automonitor_interval <minutes>- Set the Auto Monitor interval in minutes
 /show_automonitor_interval - Shows the current Auto Monitor interval
 /show_automonitor_nextruntime - Shows when the next Auto Monitor will run
 

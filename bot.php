@@ -15,10 +15,12 @@ $f2pool_path = $pool->getApiPath();
 $telegram_path = $tg->getTelegramPath();
 $m = "";
 
+/*
 $LOCAL_ENV = [
 	"BATCH_INTERVAL_MULTIPLE"	=>	60,	// in Minutes 
 	"BATCH_INTERVAL_UNIT"		=>	"minute(s)",
 ];
+ */
 
 $commands = [
 	"status" => "/status",
@@ -45,6 +47,9 @@ if (isDevMode()) {
 
 $ERROR = [
 	"INVALID_BATCH_INTERVAL"	=>	"Invalid input.  Please try again and enter number of " . $LOCAL_ENV["BATCH_INTERVAL_UNIT"],
+	"TOOBIG_BATCH_INTERVAL"		=>	"Maximum interval is " . $LOCAL_ENV["MAX_BATCHRUNINTERVAL"]/$LOCAL_ENV["BATCH_INTERVAL_MULTIPLE"] . " " . $LOCAL_ENV["BATCH_INTERVAL_UNIT"],
+	"TOOSMALL_BATCH_INTERVAL"	=>	"Minimum interval is " . $LOCAL_ENV["MIN_BATCHRUNINTERVAL"]/$LOCAL_ENV["BATCH_INTERVAL_MULTIPLE"] . " " . $LOCAL_ENV["BATCH_INTERVAL_UNIT"],
+
 ];
 
 try {
@@ -106,11 +111,15 @@ if ($update) {
     $tg->returnTgMessage($m);
 
   } elseif (isCommand($message, $commands, "set_batch_interval")) {
-    $interval = intval(substr($message, strlen($commands["set_batch_interval"])+1));
-    if ($interval) {
-      $db->setBatchRunInterval($user_id, $interval * $LOCAL_ENV["BATCH_INTERVAL_MULTIPLE"]);
+    $interval = intval(substr($message, strlen($commands["set_batch_interval"])+1)) * $LOCAL_ENV["BATCH_INTERVAL_MULTIPLE"];
+    if ($interval < $LOCAL_ENV["MIN_BATCHRUNINTERVAL"]) {
+	    $m = $ERROR["TOOSMALL_BATCH_INTERVAL"];
+    } elseif ($interval > $LOCAL_ENV["MAX_BATCHRUNINTERVAL"]) {
+	    $m = $ERROR["TOOBIG_BATCH_INTERVAL"];
+    } elseif ($interval) {
+      $db->setBatchRunInterval($user_id, $interval);
       $db->setNextBatchRunTime($user_id);
-      $m = "Auto Monitor interval set to " . $interval . " " . $LOCAL_ENV["BATCH_INTERVAL_UNIT"];
+      $m = "Auto Monitor interval set to " . $interval/$LOCAL_ENV["BATCH_INTERVAL_MULTIPLE"] . " " . $LOCAL_ENV["BATCH_INTERVAL_UNIT"];
     } else {
       $m = $ERROR["INVALID_BATCH_INTERVAL"];
     }

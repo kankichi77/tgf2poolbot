@@ -9,11 +9,13 @@ Class f2poolbot_db {
   private $KEYS = [
 	  "batchSwitch" => "batchSwitch",
   ];
+  /*
   private $LOCAL_ENV = [
 	  "DEFAULT_BATCHRUNINTERVAL" => 7200,	// 2 hours
 	  "MIN_BATCHRUNINTERVAL" => 3600,	// 1 hour
 	  "MAX_BATCHRUNINTERVAL" => 86400,	// 24 hours
   ];
+   */
 
   public function __construct() {
     global $ENV;
@@ -135,12 +137,13 @@ Class f2poolbot_db {
   }
 
   public function setBatchRunInterval($uid, $i) {
+    global $LOCAL_ENV;
     if ($i == "" || 
 	$i == 0 || 
-	$i < $this->LOCAL_ENV["MIN_BATCHRUNINTERVAL"] ||
-	$i > $this->LOCAL_ENV["MAX_BATCHRUNINTERVAL"]
+	$i < $LOCAL_ENV["MIN_BATCHRUNINTERVAL"] ||
+	$i > $LOCAL_ENV["MAX_BATCHRUNINTERVAL"]
     ) {
-      $i = $this->LOCAL_ENV["DEFAULT_BATCHRUNINTERVAL"];
+      $i = $LOCAL_ENV["DEFAULT_BATCHRUNINTERVAL"];
     }
     $this->set("automonitor_interval_for_userid_" . $uid, $i);
   }

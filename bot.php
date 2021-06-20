@@ -189,17 +189,32 @@ if ($update) {
 }
 
 function getHelpMessage() {
-	$m = "This bot will retrieve stats on your miner at the F2 Pool\n";
-	$m .= "\n";
-	$m .= "/status_<username>\n";
-	$m .= "Replace <username> with your F2 Pool username. This will show you a summary of your current mining stats.\n";
-	$m .= "\n";
-	$m .= "/status_workers_<username>\n";
-	$m .= "Replace <username> with your F2 Pool username. This will show you a summary along with stats for each of your workers in the following format:\n";
-	$m .= "worker_name - 15min_hashrate - 24hour_hashrate\n";
-	$m .= "\n";
-	$m .= "Note: Please keep your username private.  This bot does not store your username by default.";
-	return $m;
+$m = "
+This bot will retrieve stats on your miner at the F2 Pool
+
+[BASIC]
+/help - Show this help
+/status - Show status for a F2 username (if F2 username already set)
+/status_<username> - Show status for a F2 username
+/status_workers - Show detailed status for each worker (if F2 username already set) in the following format:
+#) worker_name - 15min_hashrate - 24hour_hashrate
+/status_workers_<username> - Show detailed status for each worker for a F2 user
+
+[AUTO MONITOR]
+/enable_automonitor - Turn on Auto Monitor Mode
+/disable_automonitor - Turn off Auto Monitor Mode
+/set_pool_username - Set your F2 Pool username
+/set_automonitor_interval - Set the Auto Monitor interval in minutes
+/show_automonitor_interval - Shows the current Auto Monitor interval
+/show_automonitor_nextruntime - Shows when the next Auto Monitor will run
+
+[OFFLINE ALERT]
+/enable_offlinealert - Turn on the Offline Alert
+/disable_offlinealert - Turn off the Offline Alert
+
+Note: Please keep your username private.  This bot does not use your F2 Pool information for any other purposes other than to provide the functionalities above.
+";
+return $m;
 }
 
 function isCommand($m, $commands, $i) {

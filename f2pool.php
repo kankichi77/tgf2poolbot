@@ -2,13 +2,16 @@
 require_once "env.php";
 
 Class F2Pool {
-	private $api_path = "https://api.f2pool.com/bitcoin/";
+	private $default_api_path = "https://api.f2pool.com/bitcoin/";
+	private $api_path;
 	private $username;
 	private $pool_info;
 
   public function __construct() {
 	  global $ENV;
-	  $this->api_path = $this->api_path;
+	  $this->username = "";
+	  $this->api_path = $this->default_api_path;
+	  $this->pool_info = Array();
   }
 
   public function getApiPath() {
@@ -17,7 +20,7 @@ Class F2Pool {
 
   public function setUsername($u) {
 	  $this->username = $u;
-	  $this->api_path = $this->api_path . $u;
+	  $this->api_path = $this->default_api_path . $u;
   }
 
   public function getUsername() {
@@ -32,9 +35,10 @@ Class F2Pool {
 
   private function isValidPoolInfo() {
   	$result = false;
-	if (isset($this->pool_info["worker_length"]) &&
-		  $this->pool_info["worker_length"] != "0" && 
-		  $this->pool_info["worker_length"] != ""
+	if (isset($this->pool_info) && 
+	    isset($this->pool_info["worker_length"]) &&
+	    $this->pool_info["worker_length"] != "0" && 
+	    $this->pool_info["worker_length"] != ""
 	   ) {
     		$result = true;
   	}
@@ -48,6 +52,35 @@ Class F2Pool {
   public function getStatusDetailedMessage() {
 	  $m = $this->makeStatusSummaryMessage();
 	  $m .= $this->makeWorkersDetailMessage();
+	  return $m;
+  }
+
+  public function numOfWorkers() {
+	  if ($this->isValidPoolInfo()) {
+		  return intval($this->pool_info["worker_length"]);
+	  } else {
+		  return 0;
+	  }
+  }
+
+  public function numOfOnlineWorkers() {
+	  if ($this->isValidPoolInfo()) {
+		  return intval($this->pool_info["worker_length_online"]);
+	  } else {
+		  return 0;
+	  }
+  }
+
+  public function numOfOfflineWorkers() {
+	  return $this->numOfWorkers() - $this->numOfOnlineWorkers();
+  }
+
+  public function getOfflineAlertMessage() {
+	  return $this->makeOfflineAlertMessage();
+  }
+
+  private function makeOfflineAlertMessage() {
+	  $m = $this->numOfOfflineWorkers() . " WORKER(S) OFFLINE";
 	  return $m;
   }
 

@@ -10,8 +10,8 @@ Class f2poolbot_db {
 	  "batchSwitch" => "batchSwitch",
   ];
   private $LOCAL_ENV = [
-	  "DEFAULT_BATCHRUNINTERVAL" => 600,	// 1 hour
-	  "MIN_BATCHRUNINTERVAL" => 600,	// 1 hour
+	  "DEFAULT_BATCHRUNINTERVAL" => 7200,	// 2 hours
+	  "MIN_BATCHRUNINTERVAL" => 3600,	// 1 hour
 	  "MAX_BATCHRUNINTERVAL" => 86400,	// 24 hours
   ];
 
@@ -97,6 +97,10 @@ Class f2poolbot_db {
     $this->db->exists("automonitormode_for_userid_" . $uid);
   }
 
+  public function isAutoMonitorModeOn($uid) {
+	  return $this->getAutoMonitorMode($uid) == 1;
+  }
+
   public function setAutoMonitorModeOn($uid) {
     $this->set("automonitormode_for_userid_" . $uid, 1);
   }
@@ -145,6 +149,10 @@ Class f2poolbot_db {
     return $this->get("automonitor_interval_for_userid_" . $uid);
   }
 
+  public function isBatchRunIntervalSet($uid) {
+	  return $this->getBatchRunInterval($uid) != "";
+  }
+
   public function setNextBatchRunTime($uid) {
     $this->set("nextbatchruntime_for_userid_" . $uid, time() + $this->getBatchRunInterval($uid));
   }
@@ -153,12 +161,70 @@ Class f2poolbot_db {
     return $this->get("nextbatchruntime_for_userid_" . $uid);
   }
 
+  public function getNextBatchRunTimeDate($uid) {
+	  // TYPE 1
+	  $date = new DateTime();
+	  $date->setTimezone(new DateTimeZone('UTC'));
+	  $date->setTimestamp($this->getNextBatchRunTime($uid));
+	  //return $date->format('Y-m-d H:i') . " UTC";
+	  
+	  // TYPE 2
+	  $diff = $this->getNextBatchRunTime($uid) - time();
+	  $m = floor($diff/(60*60)) . "  hour(s) " . floor(($diff % (60*60))/60) . " minute(s)";
+	  return $m;
+  }
+
   public function setChatId($uid, $chatId) {
     $this->set("chatid_for_userid_" . $uid, $chatId);
   }
 
   public function getChatId($uid) {
     return $this->get("chatid_for_userid_" . $uid);
+  }
+
+  public function setOfflineAlertOn($uid) {
+	  $this->set("offlinealertflag_for_userid_" . $uid, 1);
+  }
+
+  public function setOfflineAlertOff($uid) {
+	  $this->set("offlinealertflag_for_userid_" . $uid, 0);
+  }
+
+  public function isOfflineAlertOn($uid) {
+	  return $this->get("offlinealertflag_for_userid_" . $uid) == 1;
+  }
+
+  public function getOfflineAlertOnUserIds() {
+	$result = Array();
+	$keys = $this->db->keys("offlinealertflag_for_userid_*");
+	foreach ($keys as $key) {
+		if ($this->get($key)) $result[] = substr($key, strlen("offlinealertflag_for_userid_"));
+	}
+	return $result;
+  }
+
+  public function isDebugModeOn() {
+	  return $this->get("debugmodeflag");
+  }
+  
+  public function setDebugModeOn() {
+	  $this->set("debugmodeflag", 1);
+  }
+
+  public function setDebugModeOff() {
+	  $this->set("debugmodeflag", 0);
+  }
+
+  public function setBatchRunningStatusOff(){
+	  $this->set("batchRunning", 0);
+  }
+
+  public function setBatchRunningStatusOn() {
+	  $this->set("batchRunning", 1);
+  }
+
+  public function isBatchRunning() {
+	  return $this->get("batchRunning") == 1;
   }
 }
 ?>

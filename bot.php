@@ -13,15 +13,38 @@ $pool = new F2Pool();
 $f2pool_path = $pool->getApiPath();
 $f2pool_path = $pool->getApiPath();
 $telegram_path = $tg->getTelegramPath();
+$m = "";
+
+$LOCAL_ENV = [
+	"BATCH_INTERVAL_MULTIPLE"	=>	60,	// in Minutes 
+	"BATCH_INTERVAL_UNIT"		=>	"minute(s)",
+];
 
 $commands = [
 	"status" => "/status",
 	"status_workers" => "/status_workers",
 	"help" => "/help",
 	"start" => "/start",
-	"enable_automonitor" => "/enable_automonitor",
-	"disable_automonitor" => "/disable_automonitor",
-	"set_F2_Username" => "/set_pool_username",
+		"enable_automonitor" => "/enable_automonitor",
+		"disable_automonitor" => "/disable_automonitor",
+		"show_automonitor_status" => "/show_automonitor_status",
+		"set_F2_Username" => "/set_pool_username",
+		"set_batch_interval" => "/set_automonitor_interval",
+		"get_batch_interval" => "/show_automonitor_interval",
+		"enable_offlinealert" => "/enable_offlinealert",
+		"disable_offlinealert" => "/disable_offlinealert",
+		"show_next_batch_run_timedate" => "/show_automonitor_nextruntime",
+		"is_batch_running" => "/is_batch_running",
+];
+
+// DEV
+if (isDevMode()) {
+	$commands += [
+	];
+}
+
+$ERROR = [
+	"INVALID_BATCH_INTERVAL"	=>	"Invalid input.  Please try again and enter number of " . $LOCAL_ENV["BATCH_INTERVAL_UNIT"],
 ];
 
 try {
@@ -45,7 +68,55 @@ if ($update) {
   $db->setTelegramUsername($user_id, $username);
   $db->setChatId($user_id, $chatId);
 
-  if (isCommand($message, $commands, "set_F2_Username")) {
+  if (isCommand($message, $commands, "enable_offlinealert")) {
+	  $db->setOfflineAlertOn($user_id);
+	  $tg->returnTgMessage("Offline Alert Enabled");
+
+  } elseif (isCommand($message, $commands, "disable_offlinealert")) {
+	  $db->setOfflineAlertOff($user_id);
+	  $tg->returnTgMessage("Offline Alert Disabled");
+
+  } elseif (isCommand($message, $commands, "show_automonitor_status")) {
+	  $m = "Auto Monitor is ";
+	  if ($db->isAutoMonitorModeOn($user_id)) {
+		  $m .= "Enabled ";
+	  } else {
+		  $m .= "Disabled";
+	  }
+	  $tg->returnTgMessage($m);
+
+  } elseif (isCommand($message, $commands, "is_batch_running")) {
+          $m = "Batch Program is ";
+          if ($db->isBatchRunning()) {
+                  $m .= "On";
+          } else {
+		  $m .= "Off";
+	  }
+          $tg->returnTgMessage($m);
+
+  } elseif (isCommand($message, $commands, "show_next_batch_run_timedate")) {
+	  $m = "Next Auto Monitor Run time in ";
+	  $m .= $db->getNextBatchRunTimeDate($user_id);
+	  $tg->returnTgMessage($m);
+
+  } elseif (isCommand($message, $commands, "get_batch_interval")) {
+	 $m = "Current Auto Monitor interval is: ";
+	 $m .= $db->getBatchRunInterval($user_id)/$LOCAL_ENV["BATCH_INTERVAL_MULTIPLE"];
+	 $m .= " " . $LOCAL_ENV["BATCH_INTERVAL_UNIT"];
+    $tg->returnTgMessage($m);
+
+  } elseif (isCommand($message, $commands, "set_batch_interval")) {
+    $interval = intval(substr($message, strlen($commands["set_batch_interval"])+1));
+    if ($interval) {
+      $db->setBatchRunInterval($user_id, $interval * $LOCAL_ENV["BATCH_INTERVAL_MULTIPLE"]);
+      $db->setNextBatchRunTime($user_id);
+      $m = "Auto Monitor interval set to " . $interval . " " . $LOCAL_ENV["BATCH_INTERVAL_UNIT"];
+    } else {
+      $m = $ERROR["INVALID_BATCH_INTERVAL"];
+    }
+    $tg->returnTgMessage($m);
+
+  } elseif (isCommand($message, $commands, "set_F2_Username")) {
     $f2pool_username = substr($message, strlen($commands["set_F2_Username"])+1);
     $db->setF2Username($tg->getUserId(), $f2pool_username);
     returnTgMessage("F2 Pool username set to: " . $f2pool_username);
@@ -58,8 +129,12 @@ if ($update) {
     }
     $f2pool_username = strtok($f2pool_username, " ");
     if ($f2pool_username == "" || $f2pool_username == "username") {
-      $tg->returnTgMessage("Please specify the F2 Pool username");
-      exit;
+      if ($db->isF2UsernameSet($tg->getUserId())) {
+        $f2pool_username = $db->getF2Username($tg->getUserId());
+      } else {
+        $tg->returnTgMessage("Please specify the F2 Pool username");
+        exit;
+      }
     }
 
     $pool->setUsername($f2pool_username);
@@ -75,37 +150,36 @@ if ($update) {
     $tg->returnTgMessage($reply);
 
   } elseif (isCommand($message, $commands, "enable_automonitor")) {
-    DevOnly();
     if ($db->isF2UsernameSet($user_id)) {	  
       $db->setAutoMonitorModeOn($user_id);
-      $db->setBatchRunInterval($user_id, 0);  // default interval
+      if (!$db->isBatchRunIntervalSet($user_id)) {
+	      $db->setBatchRunInterval($user_id, 0);  // default interval
+      }
       $db->setNextBatchRunTime($user_id);
-      $tg->returnTgMessage("Auto Monitor Mode enabled.");
+      $m = "Auto Monitor Mode enabled with interval at ";
+      $m .= floor($db->getBatchRunInterval($user_id)/$LOCAL_ENV["BATCH_INTERVAL_MULTIPLE"]);
+      $m .= " " . $LOCAL_ENV["BATCH_INTERVAL_UNIT"];
+      $tg->returnTgMessage($m);
     } else {
       $tg->returnTgMessage("Please set your F2 Pool username");
     }
+
   } elseif (isCommand($message, $commands, "disable_automonitor")) {
     $db->setAutoMonitorModeOff($user_id);
     returnTgMessage("Auto Monitor Mode disabled.");
-  } elseif (isCommand($message, $commands, "help") ||
-            isCommand($message, $commands, "start")) {
+  
+  } elseif (isCommand($message, $commands, "help")) {
     $reply = $ENV["TELEGRAM_BOT_NAME"] . "\n";
-    $reply .= "This bot will retrieve stats on your miner at the F2 Pool\n";
-    $reply .= "\n";
-    $reply .= "/status_<username>\n";
-    $reply .= "Replace <username> with your F2 Pool username. This will show you a summary of your current mining stats.\n";
-    $reply .= "\n";
-    $reply .= "/status_workers_<username>\n";
-    $reply .= "Replace <username> with your F2 Pool username. This will show you a summary along with stats for each of your workers in the following format:\n";
-    $reply .= "worker_name - 15min_hashrate - 24hour_hashrate\n";
-    $reply .= "\n";
-    $reply .= "Note: Please keep your username private.  This bot does not store your username by default.";
-    returnTgMessage($reply);
+    $reply .= getHelpMessage();
+    $tg->returnTgMessage($reply);
+  } elseif (isCommand($message, $commands, "start")) {
+    $reply = $ENV["TELEGRAM_BOT_NAME"] . "\n";
+    $reply .= getHelpMessage();
+    $tg->returnTgMessage($reply);
   } else {
     // Do nothing	  
-    // returnTgMessage($message);
   }
-} elseif (1) {
+} elseif (0) {
   // DEBUG
   echo "<html><head><title></title></head><body>";	
   echo $db->getLogCount() . "<br>";
@@ -113,15 +187,21 @@ if ($update) {
   echo $db->getLastAccessed() . "<br>";
   echo "</body></html>";
 }
-/*
-function isValidF2Username($pool_info) {
-  $result = false;
-  if ($pool_info["worker_length"] != "0" && $pool_info["worker_length"] != "") {
-    $result = true;
-  }
-  return $result;
+
+function getHelpMessage() {
+	$m = "This bot will retrieve stats on your miner at the F2 Pool\n";
+	$m .= "\n";
+	$m .= "/status_<username>\n";
+	$m .= "Replace <username> with your F2 Pool username. This will show you a summary of your current mining stats.\n";
+	$m .= "\n";
+	$m .= "/status_workers_<username>\n";
+	$m .= "Replace <username> with your F2 Pool username. This will show you a summary along with stats for each of your workers in the following format:\n";
+	$m .= "worker_name - 15min_hashrate - 24hour_hashrate\n";
+	$m .= "\n";
+	$m .= "Note: Please keep your username private.  This bot does not store your username by default.";
+	return $m;
 }
- */
+
 function isCommand($m, $commands, $i) {
   return strpos($m, $commands[$i]) === 0;
 }
@@ -142,5 +222,10 @@ function getNetHR($grossHR, $rejectedH) {
   $grossHR = floatval($grossHR);
   $rejectedH = floatval($rejectedH);
   return $grossHR - $rejectedH;
+}
+
+function isDevMode() {
+	global $ENV;
+	return $ENV["ENV"] == "DEV";
 }
 ?>

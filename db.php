@@ -229,5 +229,17 @@ Class f2poolbot_db {
   public function isBatchRunning() {
 	  return $this->get("batchRunning") == 1;
   }
+
+  public function setShowStatModeOn() {
+	  $this->set("showstatmode", 1);
+  }
+
+  public function setShowStatModeOff() {
+	  $this->set("showstatmode", 0);
+  }
+
+  public function isShowStatMode() {
+	  return $this->get("showstatmode") == 1;
+  }
 }
 ?>

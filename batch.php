@@ -7,6 +7,8 @@ require "db.php";
 require "telegram.php";
 require "f2pool.php";
 
+$admin_uid = "928455104"; // DEBUG
+
 $sleep_interval = 10;
 $db = new f2poolbot_db();
 $tg = new Telegram();
@@ -15,6 +17,9 @@ $ERROR = [
 	"CANNOT_RETRIEVE_POOL_INFO"	=>	"Error: Couldn't retreive Pool Information",
 	"F2_USERNAME_UNDEFINED"		=>	"Error: F2 Username is not defined",
 ];
+$default_stat_counter = 60;
+$stat_counter_logfile = $default_stat_counter;
+$stat_counter_tg = $default_stat_counter;
 
 if (isset($argv[1])) {
   if ($argv[1] == "on") {
@@ -37,6 +42,13 @@ if (isset($argv[1])) {
 		  $m .= "off";
 	  }
 	  $m .= "\n";
+	  $m .= "Status Mode: ";
+	  if ($db->isShowStatMode()) {
+		  $m .= "yes";
+	  } else {
+		  $m .= "no";
+	  }
+	  $m .= "\n";
 	  $m .= "Batch Running? ";
 	  if ($db->isBatchRunning()) {
 		  $m .= "yes";
@@ -53,6 +65,10 @@ if (isset($argv[1])) {
 	  }
   } elseif ($argv[1] == "debug-off") {
 	  $db->setDebugModeOff();
+  } elseif ($argv[1] == "stat-on") {
+	  $db->setShowStatModeOn();
+  } elseif ($argv[1] == "stat-off") {
+	  $db->setShowStatModeOff();
   } elseif ($argv[1] == "prod"
 	    || $argv[1] == "dev"
   ) {
@@ -62,6 +78,7 @@ if (isset($argv[1])) {
 	  	$userIds = $db->getOfflineAlertOnUserIds();
 	
 		foreach ($userIds as $uid) {
+			$tg->setChatId($db->getChatId($uid));
 	  		$f2_username = $db->getF2Username($uid);
 			if ($f2_username != "") {
 				$pool->setUsername($f2_username);
@@ -69,7 +86,6 @@ if (isset($argv[1])) {
 					if($pool->numOfOfflineWorkers()
 					|| $db->isDebugModeOn()
 				  	) {
-						$tg->setChatId($db->getChatId($uid));
 						$tg->returnTgMessage($pool->getOfflineAlertMessage());
 						$db->setOfflineAlertOff($uid);
 				  	}
@@ -83,7 +99,8 @@ if (isset($argv[1])) {
 	  	// get all f2_username where auto_monitor == on for that user
 	  	$userIds = $db->getAutoMonitorModeOnUserIds();
   	  	// for each f2_username get next_batch_run_time
-	  	foreach ($userIds as $uid) {
+	  	foreach	($userIds as $uid) {
+			$tg->setChatId($db->getChatId($uid));
 			$f2_username = $db->getF2Username($uid);
 			if ($f2_username != "") {
 				$next_run_time = $db->getNextBatchRunTime($uid);
@@ -106,10 +123,35 @@ if (isset($argv[1])) {
 				}
 			}
 	  	}
+		// SHOW STATS
+		if($db->isShowStatMode()) {
+			$tg->setChatId($db->getChatId($admin_uid));
+			$tg->returnTgMessage(makeStatusMessage());
+			$db->setShowStatModeOff();
+		}
+		if($stat_counter_logfile <= 0) {
+			$m = "\n\n";
+			$m .=  makeStatusMessage();
+			$m .= "\n";
+			echo $m;
+			$stat_counter_logfile = $default_stat_counter;
+		} else {
+			$stat_counter_logfile--;
+		}
 		sleep($sleep_interval);
 	  }
 	  $db->setBatchRunningStatusOff();
   }
 } else {
+}
+
+function makeStatusMessage() {
+	$m = date('Y/m/d H:i:s') . " ";
+	$m .= "Memory Usage:\n";
+	$m .= "memory_get_usage(true): " . memory_get_usage(true) . "\n";
+	$m .= "memory_get_usage(false): " . memory_get_usage(false) . "\n";
+	$m .= "memory_get_peak_usage(true): " . memory_get_peak_usage(true) . "\n";
+	$m .= "memory_get_peak_usage(false): " . memory_get_peak_usage(false) . "\n";
+	return $m; 
 }
 ?>

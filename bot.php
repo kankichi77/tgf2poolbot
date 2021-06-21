@@ -37,6 +37,7 @@ $commands = [
 		"disable_offlinealert" => "/disable_offlinealert",
 		"show_next_batch_run_timedate" => "/show_automonitor_nextruntime",
 		"is_batch_running" => "/is_batch_running",
+		"show_batch_status" => "/show_batch_status",
 ];
 
 // DEV
@@ -90,6 +91,9 @@ if ($update) {
 	  }
 	  $tg->returnTgMessage($m);
 
+  } elseif (isCommand($message, $commands, "show_batch_status")) {
+	  $db->setShowStatModeOn();
+	  $tg->returnTgMessage("Status Mode set to ON");
   } elseif (isCommand($message, $commands, "is_batch_running")) {
           $m = "Batch Program is ";
           if ($db->isBatchRunning()) {

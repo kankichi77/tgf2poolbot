@@ -94,6 +94,7 @@ if ($update) {
   } elseif (isCommand($message, $commands, "show_batch_status")) {
 	  $db->setShowStatModeOn();
 	  $tg->returnTgMessage("Status Mode set to ON");
+
   } elseif (isCommand($message, $commands, "is_batch_running")) {
           $m = "Batch Program is ";
           if ($db->isBatchRunning()) {
@@ -131,8 +132,13 @@ if ($update) {
 
   } elseif (isCommand($message, $commands, "set_F2_Username")) {
     $f2pool_username = substr($message, strlen($commands["set_F2_Username"])+1);
-    $db->setF2Username($tg->getUserId(), $f2pool_username);
-    returnTgMessage("F2 Pool username set to: " . $f2pool_username);
+    $f2pool_username = strtok($f2pool_username, " ");
+    if ($f2pool_username == "") {
+      $tg->returnTgMessage("Please specify the F2 Pool username");
+    } else {
+      $db->setF2Username($tg->getUserId(), $f2pool_username);
+      returnTgMessage("F2 Pool username set to: " . $f2pool_username);
+    }
 
   } elseif (isCommand($message, $commands, "status")) {
     if (isCommand($message, $commands, "status_workers")) {

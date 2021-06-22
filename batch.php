@@ -90,10 +90,12 @@ if (isset($argv[1])) {
 						$db->setOfflineAlertOff($uid);
 				  	}
 				} else {
-					$tg->returnTgMessage($ERROR["CANNOT_RETRIEVE_POOL_INFO"]);
+					$m = date('Y/m/d H:i:s') . ": " . $ERROR["CANNOT_RETRIEVE_POOL_INFO"];
+					//$tg->returnTgMessage($ERROR["CANNOT_RETRIEVE_POOL_INFO"]);
+					echo $m;
 			  	}
 		  	} else {
-				$tg->returnTgMessage($ERROR["F2_USERNAME_UNDEFINED"]);
+				//$tg->returnTgMessage($ERROR["F2_USERNAME_UNDEFINED"]);
 		  	}
 	  	}
 	  	// get all f2_username where auto_monitor == on for that user
@@ -114,8 +116,9 @@ if (isset($argv[1])) {
 						$m .= $pool->getStatusSummaryMessage();
 						$tg->returnTgMessage($m);
 					} else {
-						$m = "Error retreiving Pool Information.";
-						$tg->returnTgMessage($m);
+						$m = date('Y/m/d H:i:s') . ": " . $ERROR["CANNOT_RETRIEVE_POOL_INFO"];
+						echo $m;
+						//$tg->returnTgMessage($m);
 					}
 					// set next_batch_run_time for that user
 					$db->setNextBatchRunTime($uid);

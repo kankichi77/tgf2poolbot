@@ -149,7 +149,9 @@ if (isset($argv[1])) {
 }
 
 function makeStatusMessage() {
-	$m = date('Y/m/d H:i:s') . " ";
+	global $db;
+	$m = date('Y/m/d H:i:s') . "\n";
+	$m .= "Number of TG users: " . $db->getNumOfTelegramUsernems() . "\n";
 	$m .= "Memory Usage:\n";
 	$m .= "memory_get_usage(true): " . memory_get_usage(true) . "\n";
 	$m .= "memory_get_usage(false): " . memory_get_usage(false) . "\n";

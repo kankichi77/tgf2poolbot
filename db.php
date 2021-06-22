@@ -241,5 +241,23 @@ Class f2poolbot_db {
   public function isShowStatMode() {
 	  return $this->get("showstatmode") == 1;
   }
+
+  // ==============================================================
+  // ADMIN
+  // ==============================================================
+  public function getTelegramUsernames() {
+	  $result = Array();
+	  $keys = $this->db->keys("username_for_userid_*");
+	  foreach ($keys as $key) {
+		  if ($this->get($key)) $result[] = substr($key, strlen("username_for_userid_"));
+	  }
+	  return $result;
+  }
+
+  public function getNumOfTelegramUsernems() {
+	  $usernames = $this->getTelegramUsernames();
+	  return count($usernames);
+  }
+
 }
 ?>

@@ -105,12 +105,18 @@ if ($update) {
           $tg->returnTgMessage($m);
 
   } elseif (isCommand($message, $commands, "show_next_batch_run_timedate")) {
-	  $m = "Next Auto Monitor Run time in ";
-	  $m .= $db->getNextBatchRunTimeDate($user_id);
-	  $tg->returnTgMessage($m);
+	  if ($db->isAutoMonitorModeOn($user_id)) {
+	    $m = "Next Auto Monitor Run time in ";
+	    $m .= $db->getNextBatchRunTimeDate($user_id);
+	    $tg->returnTgMessage($m);
+	  } else {
+	    $m = "Auto Monitor is Disabled";
+	    $tg->returnTgMessage($m);
+	  }
 
   } elseif (isCommand($message, $commands, "get_batch_interval")) {
 	 $m = "Current Auto Monitor interval is: ";
+	 $m .= $db->getBatchRunInterval($user_id)/$LOCAL_ENV["BATCH_INTERVAL_MULTIPLE"];
 	 $m .= $db->getBatchRunInterval($user_id)/$LOCAL_ENV["BATCH_INTERVAL_MULTIPLE"];
 	 $m .= " " . $LOCAL_ENV["BATCH_INTERVAL_UNIT"];
     $tg->returnTgMessage($m);
@@ -184,7 +190,9 @@ if ($update) {
     }
 
   } elseif (isCommand($message, $commands, "disable_automonitor")) {
+    	  
     $db->setAutoMonitorModeOff($user_id);
+
     returnTgMessage("Auto Monitor Mode disabled.");
   
   } elseif (isCommand($message, $commands, "help")) {
@@ -260,7 +268,7 @@ function getNetHR($grossHR, $rejectedH) {
 }
 
 function isDevMode() {
-	global $ENV;
-	return $ENV["ENV"] == "DEV";
+        global $ENV;
+        return $ENV["ENV"] == "DEV";
 }
 ?>

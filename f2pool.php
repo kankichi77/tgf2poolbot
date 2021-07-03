@@ -10,7 +10,8 @@ Class F2Pool {
   public function __construct() {
 	  global $ENV;
 	  $this->username = "";
-	  $this->api_path = $this->default_api_path;
+	  $this->api_path = "";
+	  //$this->api_path = $this->default_api_path;
 	  $this->pool_info = Array();
   }
 
@@ -18,9 +19,19 @@ Class F2Pool {
 	  return $this->api_path;
   }
 
+  public function setApiPath() {
+	  $this->api_path = $this->default_api_path . $this->username;
+  }
+
   public function setUsername($u) {
 	  $this->username = $u;
-	  $this->api_path = $this->default_api_path . $u;
+	  $this->setApiPath();
+	  //$this->api_path = $this->default_api_path . $u;
+  }
+
+  public function isApiPathSet() {
+	  return ($this->username != "")
+		  && ($this->api_path != "");
   }
 
   public function getUsername() {
@@ -29,8 +40,12 @@ Class F2Pool {
   }
 
   public function fetchPoolInfo(){
-	$this->pool_info = json_decode(file_get_contents($this->api_path), TRUE);
-  	return $this->isValidPoolInfo();
+	if ($this->isApiPathSet()) {
+		$this->pool_info = json_decode(file_get_contents($this->getApiPath()), TRUE);
+  		return $this->isValidPoolInfo();
+	} else {
+		return NULL;
+	}
   }
 
   private function isValidPoolInfo() {

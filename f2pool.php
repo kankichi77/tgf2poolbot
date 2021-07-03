@@ -2,7 +2,7 @@
 require_once "env.php";
 
 Class F2Pool {
-	private $default_api_path = "https://api.f2pool.com/bitcoin/";
+	//private $default_api_path = "https://api.f2pool.com/bitcoin/";
 	private $api_path;
 	private $username;
 	private $pool_info;
@@ -15,23 +15,32 @@ Class F2Pool {
 	  $this->pool_info = Array();
   }
 
+  public function getPoolInfo($p) {
+	if (isset($this->pool_info) && $p != "") {
+		return $this->pool_info[$p];
+	} else {
+		return NULL;
+	}
+  }
+
   public function getApiPath() {
 	  return $this->api_path;
   }
 
   public function setApiPath() {
-	  $this->api_path = $this->default_api_path . $this->username;
+	  $this->api_path = "https://api.f2pool.com/bitcoin/" . $this->username;
+	  //$this->api_path = "https://api.f2pool.com/bitcoin/" . $this->username . "?multi_account=" . $this->username;
+  }
+
+  public function isApiPathSet() {
+          return ($this->username != "")
+                  && ($this->api_path != "");
   }
 
   public function setUsername($u) {
 	  $this->username = $u;
 	  $this->setApiPath();
 	  //$this->api_path = $this->default_api_path . $u;
-  }
-
-  public function isApiPathSet() {
-	  return ($this->username != "")
-		  && ($this->api_path != "");
   }
 
   public function getUsername() {
@@ -51,9 +60,9 @@ Class F2Pool {
   private function isValidPoolInfo() {
   	$result = false;
 	if (isset($this->pool_info) && 
-	    isset($this->pool_info["worker_length"]) &&
-	    $this->pool_info["worker_length"] != "0" && 
-	    $this->pool_info["worker_length"] != ""
+	    //isset($this->getPoolInfo("worker_length")) &&
+	    $this->getPoolInfo("worker_length") != "0" && 
+	    $this->getPoolInfo("worker_length") != ""
 	   ) {
     		$result = true;
   	}
@@ -72,7 +81,7 @@ Class F2Pool {
 
   public function numOfWorkers() {
 	  if ($this->isValidPoolInfo()) {
-		  return intval($this->pool_info["worker_length"]);
+		  return intval($this->getPoolInfo("worker_length"));
 	  } else {
 		  return 0;
 	  }
@@ -80,7 +89,7 @@ Class F2Pool {
 
   public function numOfOnlineWorkers() {
 	  if ($this->isValidPoolInfo()) {
-		  return intval($this->pool_info["worker_length_online"]);
+		  return intval($this->getPoolInfo("worker_length_online"));
 	  } else {
 		  return 0;
 	  }
@@ -100,10 +109,10 @@ Class F2Pool {
   }
 
   private function makeStatusSummaryMessage() {
-  	$m = $this->pool_info["worker_length_online"] . "/" . $this->pool_info["worker_length"];
+  	$m = $this->getPoolInfo("worker_length_online") . "/" . $this->getPoolInfo("worker_length");
 	$m .= " worker(s) online\n";
-	$m .= "Total Current Hashrate: " . $this->toTH($this->pool_info["hashrate"],2) . "\n";
-	$m .= "Total 24h hashrate: " . $this->toTH($this->pool_info["hashes_last_day"]/(24*60*60),2) . "\n";
+	$m .= "Total Current Hashrate: " . $this->toTH($this->getPoolInfo("hashrate"),2) . "\n";
+	$m .= "Total 24h hashrate: " . $this->toTH($this->getPoolInfo("hashes_last_day")/(24*60*60),2) . "\n";
 	return $m;
   }
 
@@ -111,7 +120,7 @@ Class F2Pool {
   	$m = "\n";
         $m .= "Workers:\n";
         $counter = 0;
-        foreach ($this->pool_info["workers"] as $worker) {
+        foreach ($this->getPoolInfo("workers") as $worker) {
           $counter++;
           $m .= $counter . ") " . $worker[0] . " - " . $this->toTH($worker[1],2) . " - ";
           $m .= $this->toTH($worker[4]/(24*60*60),2);

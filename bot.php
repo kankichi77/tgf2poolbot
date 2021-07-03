@@ -117,7 +117,6 @@ if ($update) {
   } elseif (isCommand($message, $commands, "get_batch_interval")) {
 	 $m = "Current Auto Monitor interval is: ";
 	 $m .= $db->getBatchRunInterval($user_id)/$LOCAL_ENV["BATCH_INTERVAL_MULTIPLE"];
-	 $m .= $db->getBatchRunInterval($user_id)/$LOCAL_ENV["BATCH_INTERVAL_MULTIPLE"];
 	 $m .= " " . $LOCAL_ENV["BATCH_INTERVAL_UNIT"];
     $tg->returnTgMessage($m);
 

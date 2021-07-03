@@ -7,8 +7,6 @@ require "db.php";
 require "telegram.php";
 require "f2pool.php";
 
-$admin_uid = "928455104"; // DEBUG
-
 $sleep_interval = 10;
 $db = new f2poolbot_db();
 $tg = new Telegram();
@@ -128,7 +126,7 @@ if (isset($argv[1])) {
 	  	}
 		// SHOW STATS
 		if($db->isShowStatMode()) {
-			$tg->setChatId($db->getChatId($admin_uid));
+			$tg->setChatId($db->getChatId($ENV["ADMIN_UID"]));
 			$tg->returnTgMessage(makeStatusMessage());
 			$db->setShowStatModeOff();
 		}

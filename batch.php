@@ -53,7 +53,16 @@ if (isset($argv[1])) {
 	  } else {
 		  $m .= "no";
 	  }
+	  $m .= "\n";
+	  $m .= "Status Mode: ";
+          if ($db->isShowStatMode()) {
+                  $m .= "yes";
+          } else {
+                  $m .= "no";
+	  }
 	  $m .= "\n\n";
+	  $m .= makeStatusMessage();
+          $m .= "\n\n";
 	  echo $m;
   } elseif ($argv[1] == "debug-on") {
 	  if($ENV["ENV"] == "DEV") {
@@ -149,7 +158,7 @@ if (isset($argv[1])) {
 function makeStatusMessage() {
 	global $db;
 	$m = date('Y/m/d H:i:s') . "\n";
-	$m .= "Number of TG users: " . $db->getNumOfTelegramUsernems() . "\n";
+	$m .= "Number of TG users: " . $db->getNumOfTelegramUsernames() . "\n";
 	$m .= "Memory Usage:\n";
 	$m .= "memory_get_usage(true): " . memory_get_usage(true) . "\n";
 	$m .= "memory_get_usage(false): " . memory_get_usage(false) . "\n";

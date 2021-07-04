@@ -254,7 +254,7 @@ Class f2poolbot_db {
 	  return $result;
   }
 
-  public function getNumOfTelegramUsernems() {
+  public function getNumOfTelegramUsernames() {
 	  $usernames = $this->getTelegramUsernames();
 	  return count($usernames);
   }

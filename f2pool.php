@@ -114,6 +114,9 @@ Class F2Pool {
 	$m .= " worker(s) online\n";
 	$m .= "Total Current Hashrate: " . $this->toTH($this->getPoolInfo("hashrate"),2) . "\n";
 	$m .= "Total 24h hashrate: " . $this->toTH($this->getPoolInfo("hashes_last_day")/(24*60*60),2) . "\n";
+	$m .= "Balance: " . $this->toBTC($this->getPoolInfo("fixed_balance")) . "\n";
+	$m .= "Yesterday's Revenue: " . $this->toBTC($this->getPoolInfo("today_paid")) . "\n"; 
+	$m .= "Today's Estimated Revenue: " . $this->toBTC($this->getPoolInfo("value_today")) . "\n"; 
 	return $m;
   }
 
@@ -135,5 +138,10 @@ Class F2Pool {
   	}
   	return floor(floatval($h)/10000000000)/100 . " TH/s";
   }
+
+  private function toBTC($str) {
+	  // takes a string of format 0.123456789123... and returns first 10 chars so it's 0.12345678
+	  return substr($str, 0, 10);
+  } 
 }
 ?>

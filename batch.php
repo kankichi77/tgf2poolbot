@@ -85,48 +85,53 @@ if (isset($argv[1])) {
 	  	$userIds = $db->getOfflineAlertOnUserIds();
 	
 		foreach ($userIds as $uid) {
-			$tg->setChatId($db->getChatId($uid));
 	  		$f2_username = $db->getF2Username($uid);
 			if ($f2_username != "") {
+				$pool = new F2Pool();
 				$pool->setUsername($f2_username);
 				if ($pool->fetchPoolInfo()) {
 					if($pool->numOfOfflineWorkers()
 					|| $db->isDebugModeOn()
-				  	) {
+					) {
+						$tg = new Telegram();
+						$tg->setChatId($db->getChatId($uid));
 						$tg->returnTgMessage($pool->getOfflineAlertMessage());
+						$tg = null;
 						$db->setOfflineAlertOff($uid);
 				  	}
 				} else {
 					$m = date('Y/m/d H:i:s') . ": " . $ERROR["CANNOT_RETRIEVE_POOL_INFO"];
-					//$tg->returnTgMessage($ERROR["CANNOT_RETRIEVE_POOL_INFO"]);
 					echo $m;
-			  	}
-		  	} else {
-				//$tg->returnTgMessage($ERROR["F2_USERNAME_UNDEFINED"]);
+				}
+				$pool = null;
 		  	}
 	  	}
+
 	  	// get all f2_username where auto_monitor == on for that user
 	  	$userIds = $db->getAutoMonitorModeOnUserIds();
   	  	// for each f2_username get next_batch_run_time
 	  	foreach	($userIds as $uid) {
-			$tg->setChatId($db->getChatId($uid));
 			$f2_username = $db->getF2Username($uid);
 			if ($f2_username != "") {
 				$next_run_time = $db->getNextBatchRunTime($uid);
 				// if current_time > next_batch_run_time then run the command
 				if ($next_run_time <= time()) {
-					$tg->setChatId($db->getChatId($uid));
 					// run command
+					$pool = new F2Pool();
 					$pool->setUsername($f2_username);
 					if ($pool->fetchPoolInfo()) {
 						$m = "[Auto Monitor]\n";
 						$m .= $pool->getStatusSummaryMessage();
+						$tg = new Telegram();
+						$tg->setChatId($db->getChatId($uid));
 						$tg->returnTgMessage($m);
+						$tg = null;
 					} else {
 						$m = date('Y/m/d H:i:s') . ": " . $ERROR["CANNOT_RETRIEVE_POOL_INFO"];
 						echo $m;
 						//$tg->returnTgMessage($m);
 					}
+					$pool = null;
 					// set next_batch_run_time for that user
 					$db->setNextBatchRunTime($uid);
 				} else {
@@ -135,8 +140,10 @@ if (isset($argv[1])) {
 	  	}
 		// SHOW STATS
 		if($db->isShowStatMode()) {
+			$tg = new Telegram();
 			$tg->setChatId($db->getChatId($ENV["ADMIN_UID"]));
 			$tg->returnTgMessage(makeStatusMessage());
+			$tg = null;
 			$db->setShowStatModeOff();
 		}
 		if($stat_counter_logfile <= 0) {

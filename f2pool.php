@@ -17,8 +17,8 @@ Class F2Pool {
 
   public function getPoolInfo($p) {
 	if (isset($this->pool_info) && $p != "") {
-		//return $this->pool_info[$p];
-		return $this->pool_info[$this->username][$p];
+		return $this->pool_info[$p];
+		//return $this->pool_info[$this->username][$p];
 	} else {
 		return NULL;
 	}
@@ -29,8 +29,8 @@ Class F2Pool {
   }
 
   public function setApiPath() {
-	  //$this->api_path = "https://api.f2pool.com/bitcoin/" . $this->username;
-	  $this->api_path = "https://api.f2pool.com/bitcoin/" . $this->username . "?multi_account=" . $this->username;
+	  $this->api_path = "https://api.f2pool.com/bitcoin/" . $this->username;
+	  //$this->api_path = "https://api.f2pool.com/bitcoin/" . $this->username . "?multi_account=" . $this->username;
   }
 
   public function isApiPathSet() {

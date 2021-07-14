@@ -139,9 +139,9 @@ Class F2Pool {
   	return floor(floatval($h)/10000000000)/100 . " TH/s";
   }
 
-  private function toBTC($str) {
+  private function toBTC($f) {
 	  // takes a string of format 0.123456789123... and returns first 10 chars so it's 0.12345678
-	  return substr($str, 0, 10);
+	  return sprintf("%.8f", round($f,8), "0") . " BTC";
   } 
 }
 ?>
